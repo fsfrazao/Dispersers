@@ -17,8 +17,10 @@ def create_tables(h5_database,simulation=1):
     class Individuals(IsDescription):
         time_stamp=StringCol(24)
         ind_id=Int32Col()
-        pos_x=Float32Col()
-        pos_y=Float32Col()
+        initial_x=Float32Col()
+        initial_y=Float32Col()
+        final_x=Float32Col()
+        fianl_y=Float32Col()
         energy=Float32Col()
 
     class Seeds(IsDescription):
