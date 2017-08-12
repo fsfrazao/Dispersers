@@ -1,4 +1,5 @@
 from py_ibm import *
+import database_utils
 from plot_trees import plot_tree_pos
 import pdb
 from tables import *
@@ -9,22 +10,63 @@ class Dispersers_World(Tree_World):
 
     def __init__(self,topology, parent_tree_class):
         super().__init__(topology)
-        self.seeds_db=None
-        self.seeds_cursor=None
+        self.db=None
+        self.seed_table=None
+        self.ind_table=None
+        self.sim_number=1
         self.parent_tree_class=parent_tree_class
 
-    def open_seed_database(self, path="./"):
-        self.seeds_db=connect(path+"seed_db.sql")
-        self.seeds_cursor=self.seeds_db.cursor()
-        self.seeds_cursor.execute(''' CREATE TABLE IF NOT EXISTS seeds(tree_id INTEGER, initial_x FLOAT, initial_y FLOAT, final_x FLOAT, final_y FLOAT, dispersal_type TEXT)''')
-        self.seeds_db.commit()
+    def setup_database(self, filename, sim_number):
+        self.db=database_utils.create_database(file_name,sim_number)
+        self.seed_table=self.db.get_node("/sim_{0}/dispersers/sys_lvl/Seeds".format(sim_number))
+        self.ind_table
 
     def add_seed_entry(self,tree_id,initial_x,
         initial_y,final_x,final_y,dispersal_type):
+        seed_table=self.db.get_node("/sim_{0}/dispersers/sys_lvl/Seeds".format(self.sim_number))
+        seed_r=seed_table.row
 
-        self.seeds_cursor.execute(''' INSERT INTO seeds(tree_id,initial_x,initial_y,final_x,final_y,dispersal_type) VALUES(?,?,?,?,?,?)''',(tree_id,initial_x,
-            initial_y,final_x,final_y,dispersal_type))
-        #self.seeds_db.commit()
+        seed_r["deposition_time"]=world.time
+        seed_r["tree_id"]=tree_id
+        seed_r["initial_x"]=initial_x
+        seed_r["initial_y"]=initial_y
+        seed_r["final_x"]=final_x
+        seed_r["final_y"]=final_y
+        seed_r["dispersal_type"]=dispersal_type
+
+        seed_r.flush()
+        seed_table.flush()
+
+
+    def add_ind_entry(self,ind_id,initial_x,
+        initial_y,final_x,final_y,energy):
+        ind_table=self.db.get_node("/sim_{0}/dispersers/ind_lvl/Ind".format(self.sim_number))
+        ind_r=ind_table.row
+
+        ind_r["time_stampe"]=world.time
+        ind_r["ind_id"]=ind_id
+        ind_r["initial_x"]=initial_x
+        ind_r["initial_y"]=initial_y
+        ind_r["final_x"]=final_x
+        ind_r["final_y"]=final_y
+        ind_r["energy"]=energy
+
+        ind_r.flush()
+        ind_table.flush()
+
+
+    def run_simulation(self,n,database_name, sim_n=1):
+        self.db=database_utils.create_database(database_name,sim_number)
+
+        for i in range(n):
+            dispersers_ids=list(PrimaryDisperser.Instances.keys())
+            for d in dispersers_ids:
+                PrimaryDisperser.Instances.get(d).schedule2()
+            self.increment_time()
+        self.db.close()
+
+
+
 
     def close_seeds_db(self):
         self.seeds_db.commit()
