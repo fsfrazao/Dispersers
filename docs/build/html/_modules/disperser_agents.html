@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>disperser_agents &mdash; dispersers 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dispersers 0.2.3 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dispersers
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../world.html">World Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topology.html">Topology Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree_agent.html">Tree Agent Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../disperser_agents.html">Disperser Agent Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../database_utils.html">Database Utils Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">Analyses Module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dispersers</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>disperser_agents</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for disperser_agents</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">py_ibm</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">trees_ibm</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../disperser_agents.html#disperser_agents.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for exceptions in this module.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="TreeError"><a class="viewcode-back" href="../disperser_agents.html#disperser_agents.TreeError">[docs]</a><span class="k">class</span> <span class="nc">TreeError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised for errors regarding trees.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        expression -- input expression in which the error occurred</span>
+<span class="sd">        message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span></div>
+
+
+<span class="k">class</span> <span class="nc">PrimaryDisperser</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+
+    <span class="n">GrowthCoefficient</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">EnergyPerFruit</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">CostPerDisperser</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">AvgEnergy</span> <span class="o">=</span> <span class="mi">880</span>
+
+    <span class="n">DERIVED_DISPERSERS</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">DisperserFactory</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">new_cls_name</span><span class="p">,</span> <span class="n">new_parameters</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">new_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">patch</span> <span class="o">=</span> <span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy_track</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_track</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_on_this_tree</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">previous_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">gut_passage_time</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;gut_passage_time&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_fruits</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;max_fruits&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;current_tree_id&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;energy&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_rep_energy</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;min_rep_energy&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_1</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;energy_level_1&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_2</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;energy_level_2&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree_time</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;tree_time&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feeding</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;feeding&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traveling</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;traveling&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resting</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;resting&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;radius&#39;</span><span class="p">]</span>
+
+            <span class="n">PrimaryDisperser</span><span class="o">.</span><span class="n">IncrementID</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="nb">id</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># self.id=Tree.ID</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">Instances</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">IncrementID</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">Instances</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="n">new_attr_met</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="n">new_cls_name</span><span class="p">,</span>
+                        <span class="s1">&#39;EnergyPerFruit&#39;</span><span class="p">:</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;EnergyPerFruit&#39;</span><span class="p">],</span>
+                        <span class="s1">&#39;CostPerDisperser&#39;</span><span class="p">:</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;CostPerDisperser&#39;</span><span class="p">],</span>
+                        <span class="s1">&#39;AvgEnergy&#39;</span><span class="p">:</span> <span class="n">new_parameters</span><span class="p">[</span><span class="s1">&#39;AvgEnergy&#39;</span><span class="p">],</span>
+                        <span class="s1">&#39;Indices&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                        <span class="s1">&#39;__init__&#39;</span><span class="p">:</span> <span class="n">new_init</span><span class="p">}</span>
+
+        <span class="n">new_cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_cls_name</span><span class="p">,</span> <span class="p">(</span><span class="n">cls</span><span class="p">,),</span> <span class="n">new_attr_met</span><span class="p">)</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">DERIVED_DISPERSERS</span><span class="p">[</span><span class="n">new_cls_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cls</span>
+
+        <span class="k">return</span> <span class="n">new_cls</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">TotalEnergy</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">tEnergy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">energy</span> <span class="o">&gt;=</span> <span class="n">i</span><span class="o">.</span><span class="n">min_rep_energy</span><span class="p">:</span>
+                <span class="n">tEnergy</span> <span class="o">+=</span> <span class="n">i</span><span class="o">.</span><span class="n">energy</span> <span class="o">-</span> <span class="n">i</span><span class="o">.</span><span class="n">min_rep_energy</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">tEnergy</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">PopulationSize</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">Instances</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">CalculatePopGrowth</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+        <span class="n">N_r</span><span class="p">,</span> <span class="n">Et</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">TotalEnergy</span><span class="p">()</span>
+        <span class="n">N_0</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PopulationSize</span><span class="p">()</span>
+        <span class="n">El</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">CountFruits</span><span class="p">()</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">EnergyPerFruit</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">El</span> <span class="o">/</span> <span class="n">cls</span><span class="o">.</span><span class="n">AvgEnergy</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cls</span><span class="o">.</span><span class="n">CostPerDisperser</span>
+        <span class="n">growth</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">Et</span> <span class="o">*</span> <span class="p">((</span><span class="n">K</span> <span class="o">-</span> <span class="n">N_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">K</span><span class="p">)</span> <span class="k">if</span> <span class="n">K</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="c1"># growth_rate=cls.TotalEnergy()*cls.GrowthCoefficient</span>
+        <span class="c1"># growth=N_r*growth_rate</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">growth</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">gut_passage_time</span><span class="p">,</span> <span class="n">max_fruits</span><span class="p">,</span> <span class="n">current_tree_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">world</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gut_passage_time</span> <span class="o">=</span> <span class="n">gut_passage_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_fruits</span> <span class="o">=</span> <span class="n">max_fruits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patch</span> <span class="o">=</span> <span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="mi">60</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_rep_energy</span> <span class="o">=</span> <span class="mi">70</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_1</span> <span class="o">=</span> <span class="mi">80</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_2</span> <span class="o">=</span> <span class="mi">150</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree_time</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_on_this_tree</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feeding</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traveling</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resting</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.7</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span> <span class="o">=</span> <span class="n">current_tree_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rest_prob</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_track</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_track</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">PrimaryDisperser</span><span class="o">.</span><span class="n">IncrementID</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">increase_tree_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_on_this_tree</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">reset_tree_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_on_this_tree</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">update_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">new_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">in_bounds</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">new_position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patch</span> <span class="o">=</span> <span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">move_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Move beetle forward in a straight line.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            distance (float): distance of movement in grid cells.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">                None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span>
+        <span class="n">new_position</span> <span class="o">=</span> <span class="p">((</span><span class="n">x0</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">radians</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span> <span class="o">*</span> <span class="n">distance</span><span class="p">,</span>
+                         <span class="n">y0</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">radians</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span> <span class="o">*</span> <span class="n">distance</span><span class="p">))</span>
+        <span class="c1"># verified_position=self.world.topology.in_bounds(new_position)</span>
+        <span class="c1"># self.update_position(verified_position)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_position</span><span class="p">(</span><span class="n">new_position</span><span class="p">)</span>
+        <span class="c1"># self.track.append(self.position)</span>
+
+    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_position</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traveling</span>
+        <span class="c1"># self.track.append(self.position)</span>
+
+    <span class="k">def</span> <span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree_id</span><span class="p">):</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">tree_pos</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">position</span>
+        <span class="n">tree_type</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">Ftype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_seed</span><span class="p">(</span><span class="n">tree_pos</span><span class="o">=</span><span class="n">tree_pos</span><span class="p">,</span> <span class="n">tree_type</span><span class="o">=</span><span class="n">tree_type</span><span class="p">,</span> <span class="n">tree_id</span><span class="o">=</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feeding</span>
+
+        <span class="n">tree</span><span class="o">.</span><span class="n">decrement_fruit_stock</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">digest_seeds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">step</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">gut_passage_time</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">defecate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">defecate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="c1">#seed_pos=(self.position[0]+random()*0.5, self.position[1]+random()*0.5 )</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_position</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span>
+        <span class="n">seed_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">rand_point_along_line</span><span class="p">(</span>
+            <span class="n">x0</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">y0</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">x1</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">y1</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">seed_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">in_bounds</span><span class="p">(</span><span class="n">seed_pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">seedbank</span><span class="p">[</span><span class="n">seed</span><span class="p">[</span><span class="s1">&#39;tree_type&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seed_pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">add_seed_entry</span><span class="p">(</span><span class="n">tree_id</span><span class="o">=</span><span class="n">seed</span><span class="p">[</span><span class="s2">&quot;tree_id&quot;</span><span class="p">],</span> <span class="n">initial_x</span><span class="o">=</span><span class="n">seed</span><span class="p">[</span><span class="s2">&quot;tree_pos&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                  <span class="n">initial_y</span><span class="o">=</span><span class="n">seed</span><span class="p">[</span><span class="s2">&quot;tree_pos&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">final_x</span><span class="o">=</span><span class="n">seed_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">final_y</span><span class="o">=</span><span class="n">seed_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dispersal_type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree_pos</span><span class="p">,</span> <span class="n">tree_type</span><span class="p">,</span> <span class="n">tree_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds a seed to the disperser&#39;s gut&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;tree_type&quot;</span><span class="p">:</span> <span class="n">tree_type</span><span class="p">,</span>
+                           <span class="s2">&quot;tree_id&quot;</span><span class="p">:</span> <span class="n">tree_id</span><span class="p">,</span> <span class="s2">&quot;tree_pos&quot;</span><span class="p">:</span> <span class="n">tree_pos</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">trees_within_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+        <span class="n">cell_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">patch_area</span><span class="o">**</span><span class="mf">0.5</span>
+
+        <span class="n">neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">hood</span><span class="p">(</span>
+            <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">,</span> <span class="n">remove_center</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">radius</span> <span class="o">/</span> <span class="n">cell_length</span><span class="p">))</span>
+        <span class="n">trees_in_neighborhood</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">trees_in_patches</span><span class="p">(</span>
+            <span class="n">neighborhood</span><span class="p">)</span>
+        <span class="n">trees_in_circle</span> <span class="o">=</span> <span class="p">[</span><span class="nb">id</span> <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">trees_in_neighborhood</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">point_within_circle</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">radius</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">scaled_distance</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">cell_length</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trees_in_circle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">trees_in_circle</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TreeError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;no tree within radius&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">feeding_tree_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">):</span>
+        <span class="n">resistance_penalty</span> <span class="o">=</span> <span class="mf">1.2</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">euclidean_distance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">gap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">line_between_points</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gap</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gap</span><span class="p">]</span>
+        <span class="n">resistance</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">surface</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="n">resistance</span> <span class="o">=</span> <span class="n">resistance</span> <span class="o">*</span> <span class="n">resistance_penalty</span>
+        <span class="k">if</span> <span class="n">resistance</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">+=</span> <span class="n">resistance</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">available_fruits</span> <span class="o">/</span> <span class="n">distance</span> <span class="k">if</span> <span class="n">distance</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">non_feeding_tree_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">):</span>
+        <span class="n">resistance_penalty</span> <span class="o">=</span> <span class="mf">0.3</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">euclidean_distance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">gap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">line_between_points</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tree</span><span class="o">.</span><span class="n">patch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gap</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gap</span><span class="p">]</span>
+        <span class="n">resistance</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">surface</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="n">resistance</span> <span class="o">=</span> <span class="n">resistance</span> <span class="o">*</span> <span class="n">resistance_penalty</span>
+        <span class="k">if</span> <span class="n">resistance</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">+=</span> <span class="n">resistance</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">distance</span> <span class="k">if</span> <span class="n">distance</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="c1"># TODO:</span>
+    <span class="c1"># What if there are no trees around?</span>
+    <span class="k">def</span> <span class="nf">choose_feeding_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trees</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trees</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">tree_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">:</span>
+                <span class="n">tree_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feeding_tree_value</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tree</span><span class="p">))</span>
+                <span class="n">tree_values</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;tree_id&#39;</span><span class="p">:</span> <span class="n">tree</span><span class="p">,</span> <span class="s1">&#39;tree_value&#39;</span><span class="p">:</span> <span class="n">tree_value</span><span class="p">})</span>
+
+            <span class="n">sorted_by_value</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">tree_values</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s1">&#39;tree_value&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span><span class="p">(</span><span class="n">sorted_by_value</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;tree_id&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TreeError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;no feeding tree&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">choose_non_feeding_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trees</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trees</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">tree_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">:</span>
+                <span class="n">tree_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_feeding_tree_value</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tree</span><span class="p">))</span>
+                <span class="n">tree_values</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;tree_id&#39;</span><span class="p">:</span> <span class="n">tree</span><span class="p">,</span> <span class="s1">&#39;tree_value&#39;</span><span class="p">:</span> <span class="n">tree_value</span><span class="p">})</span>
+
+            <span class="n">sorted_by_value</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">tree_values</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s1">&#39;tree_value&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span><span class="p">(</span><span class="n">sorted_by_value</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;tree_id&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TreeError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;no feeding tree&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">active_or_not</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rest_prob</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">on_feeding_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span><span class="p">)</span><span class="o">.</span><span class="n">available_fruits</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">random_activity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">((</span><span class="s1">&#39;resting&#39;</span><span class="p">,</span> <span class="s1">&#39;moving&#39;</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">activity</span> <span class="o">==</span> <span class="s1">&#39;resting&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_resting</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_roam</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">activity_feeding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;feed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_feeding_tree</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">activity_go_to_feeding_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees_within_radius</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TreeError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are no other trees around&quot;</span><span class="p">)</span>
+        <span class="n">trees</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">chosen_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">choose_feeding_tree</span><span class="p">(</span><span class="n">trees</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">chosen_tree</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span> <span class="o">=</span> <span class="n">chosen_tree</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;no other trees&quot;</span><span class="p">)</span>
+
+        <span class="c1"># What if the only tree around is the current tree?</span>
+
+    <span class="k">def</span> <span class="nf">activity_resting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;rest&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">increase_tree_timer</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">activity_roam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;roam&quot;</span><span class="p">)</span>
+        <span class="n">trees</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees_within_radius</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">chosen_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">choose_non_feeding_tree</span><span class="p">(</span>
+                <span class="n">trees</span><span class="p">))</span>  <span class="c1"># self.world.parent_tree_class.Instances.get(np.random.choice(trees))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">chosen_tree</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span> <span class="o">=</span> <span class="n">chosen_tree</span><span class="o">.</span><span class="n">id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_tree_timer</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">increase_tree_timer</span><span class="p">()</span>
+        <span class="c1"># What if the only tree around is the current tree?</span>
+
+    <span class="k">def</span> <span class="nf">low_energy_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_feeding_tree</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_on_this_tree</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree_time</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity_feeding</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">increase_tree_timer</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity_go_to_feeding_tree</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reset_tree_timer</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity_feeding</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">increase_tree_timer</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_go_to_feeding_tree</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_tree_timer</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_feeding</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">increase_tree_timer</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">moderate_energy_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_activity</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">high_energy_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activity_resting</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># if self.energy &lt; self.energy_level_1:</span>
+        <span class="c1">#     self.low_energy_action()</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     if self.from_feeding():</span>
+        <span class="c1">#         if self.energy&gt;self.energy_level_2:</span>
+        <span class="c1">#             self.high_energy_level()</span>
+        <span class="c1">#         else:</span>
+        <span class="c1">#             self.low_energy_action()</span>
+        <span class="c1">#     else:</span>
+        <span class="c1">#         self.energy+=self.resting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_2</span><span class="p">:</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees_within_radius</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+            <span class="n">chosen_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">choose_feeding_tree</span><span class="p">(</span><span class="n">trees</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">chosen_tree</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">chosen_tree</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span> <span class="o">=</span> <span class="n">chosen_tree</span><span class="o">.</span><span class="n">id</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eat</span><span class="p">(</span><span class="n">tree</span><span class="o">=</span><span class="n">chosen_tree</span><span class="p">)</span>
+                <span class="c1">#print(d.energy, &quot;&gt;&gt;&gt;&gt;&gt;&gt;&quot;)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">activity_resting</span><span class="p">()</span>
+                <span class="c1">#print(d.energy, &quot;------|&quot;)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_resting</span><span class="p">()</span>
+            <span class="c1">#print(d.energy, &quot;------&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">digest_seeds</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">remove_me</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">PrimaryDisperser</span><span class="o">.</span><span class="n">Instances</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">current_tree_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Checks if the current tree still exists&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">parent_tree_class</span><span class="o">.</span><span class="n">Instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_tree_id</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">schedule2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+        <span class="c1"># if the current tree does not exist anymore,</span>
+        <span class="c1"># go to a new tree</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_tree_exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity_roam</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traveling</span>  <span class="c1"># add the spent energy again</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_me</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">low_energy_action</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_level_2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moderate_energy_action</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">high_energy_action</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">digest_seeds</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Fabio Frazao.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.2.3',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
